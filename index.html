@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEGENDSHUB™ | COMMAND CENTER</title>
+    <style>
+        body { background: #0a0a0a; color: #00f2ff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { border: 2px solid #00f2ff; padding: 20px; box-shadow: 0 0 15px #00f2ff; width: 90%; max-width: 600px; text-align: center; }
+        h1 { text-shadow: 2px 2px 10px #00f2ff; margin-bottom: 5px; }
+        .status-bar { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; font-size: 0.8em; }
+        button { background: transparent; border: 1px solid #00f2ff; color: #00f2ff; padding: 10px 20px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #00f2ff; color: #000; box-shadow: 0 0 20px #00f2ff; }
+        #results { margin-top: 30px; text-align: left; background: #111; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; font-size: 0.9em; color: #00ff41; }
+        .bug-item { border-left: 3px solid #00ff41; padding-left: 10px; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>LEGENDSHUB™</h1>
+        <div class="status-bar">SYSTEM STATUS: <span id="sys-status">READY_TO_HUNT</span></div>
+        
+        <p>Targeting: .gov.za | .ac.za | .edu.za</p>
+        <button onclick="startHunt()">INITIALIZE GLOBAL ACQUISITION</button>
+
+        <div id="results">
+            <div class="bug-item">Waiting for handshake...</div>
+        </div>
+    </div>
+
+    <script>
+        // Replace 'TUNNEL_URL' with the link cloudflared gives you later
+        const API_URL = "TUNNEL_URL"; 
+
+        async function startHunt() {
+            document.getElementById('sys-status').innerText = "HUNTING_IN_PROGRESS...";
+            try {
+                const response = await fetch(`${API_URL}/start_hunt`);
+                const data = await response.json();
+                alert(data.message);
+                setInterval(fetchResults, 5000); // Check for results every 5 seconds
+            } catch (err) {
+                alert("Bridge Connection Failed. Check your Tunnel.");
+            }
+        }
+
+        async function fetchResults() {
+            try {
+                const response = await fetch(`${API_URL}/get_results`);
+                const data = await response.json();
+                const container = document.getElementById('results');
+                container.innerHTML = "";
+                data.data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "bug-item";
+                    div.innerText = item;
+                    container.appendChild(div);
+                });
+            } catch (err) { console.log("Waiting for data..."); }
+        }
+    </script>
+</body>
+</html>
+
