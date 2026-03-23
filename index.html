@@ -5,61 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VXR SQUAD™ | COMMAND CENTER</title>
     <style>
-        body { background: #0a0a0a; color: #00f2ff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { border: 2px solid #00f2ff; padding: 20px; box-shadow: 0 0 15px #00f2ff; width: 90%; max-width: 600px; text-align: center; }
-        h1 { text-shadow: 2px 2px 10px #00f2ff; margin-bottom: 5px; }
-        .status-bar { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; font-size: 0.8em; }
-        button { background: transparent; border: 1px solid #00f2ff; color: #00f2ff; padding: 10px 20px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #00f2ff; color: #000; box-shadow: 0 0 20px #00f2ff; }
-        #results { margin-top: 30px; text-align: left; background: #111; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; font-size: 0.9em; color: #00ff41; }
-        .bug-item { border-left: 3px solid #00ff41; padding-left: 10px; margin-bottom: 8px; }
+        body { background: #050505; color: #00f2ff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { border: 1px solid #00f2ff; padding: 30px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); width: 95%; max-width: 700px; background: rgba(0,0,0,0.9); }
+        h1 { font-size: 1.8em; letter-spacing: 5px; text-transform: uppercase; margin: 0; text-align: center; }
+        .status-bar { border-bottom: 1px solid #111; padding: 15px 0; margin-bottom: 20px; font-size: 0.75em; color: #00ff41; letter-spacing: 2px; text-align: center; }
+        .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; font-size: 0.8em; border: 1px solid #111; padding: 10px; }
+        .grid-info span { color: #555; }
+        button { width: 100%; background: #00f2ff; border: none; color: #000; padding: 15px; cursor: pointer; font-weight: bold; font-family: 'Courier New'; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); transition: 0.3s; }
+        button:hover { background: #00ff41; box-shadow: 0 0 15px #00ff41; }
+        #console-output { margin-top: 25px; background: #000; border: 1px solid #1a1a1a; height: 350px; overflow-y: auto; padding: 15px; font-size: 0.85em; }
+        .node-entry { border-left: 2px solid #00f2ff; padding-left: 10px; margin-bottom: 10px; animation: scan 0.5s ease-out; }
+        .node-entry b { color: #fff; }
+        @keyframes scan { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body>
-
     <div class="container">
         <h1>LEGENDSHUB™</h1>
-        <div class="status-bar">SYSTEM STATUS: <span id="sys-status">READY_TO_HUNT</span></div>
-        
-        <p>Targeting: .gov.za | .ac.za | .edu.za</p>
-        <button onclick="startHunt()">INITIALIZE GLOBAL ACQUISITION</button>
-
-        <div id="results">
-            <div class="bug-item">Waiting for handshake...</div>
+        <div class="status-bar">> SYS_STATUS: <span id="sys-status">IDLE_LISTENING</span></div>
+        <div class="grid-info">
+            <div><span>SCOPE:</span> GLOBAL_ACQUISITION</div>
+            <div><span>PROTOCOL:</span> SNI/SSL_443</div>
+        </div>
+        <button id="main-btn" onclick="engageAcquisition()">INITIALIZE DATA STREAM</button>
+        <div id="console-output">
+            <div class="node-entry">[SYSTEM] Awaiting Cloudflare Bridge Connection...</div>
         </div>
     </div>
 
     <script>
-        // Replace 'TUNNEL_URL' with the link cloudflared gives you later
-        const API_URL = "https://productivity-maintaining-accurately-norfolk.trycloudflare.com"; 
+        // Use the Cloudflare URL generated in Step 2 here
+        const API_URL = "https://YOUR-CLOUDFLARE-URL.trycloudflare.com"; 
 
-        async function startHunt() {
-            document.getElementById('sys-status').innerText = "HUNTING_IN_PROGRESS...";
+        async function engageAcquisition() {
+            document.getElementById('sys-status').innerText = "ACQUIRING_DATA_STREAM...";
+            document.getElementById('main-btn').innerText = "STREAM_ACTIVE";
             try {
-                const response = await fetch(`${API_URL}/start_hunt`);
-                const data = await response.json();
-                alert(data.message);
-                setInterval(fetchResults, 5000); // Check for results every 5 seconds
-            } catch (err) {
-                alert("Bridge Connection Failed. Check your Tunnel.");
-            }
+                await fetch(`${API_URL}/start_hunt`); 
+                setInterval(refreshStream, 3000); 
+            } catch (e) { alert("Bridge Failure: Check Cloudflare Tunnel"); }
         }
 
-        async function fetchResults() {
+        async function refreshStream() {
             try {
-                const response = await fetch(`${API_URL}/get_results`);
-                const data = await response.json();
-                const container = document.getElementById('results');
-                container.innerHTML = "";
-                data.data.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = "bug-item";
-                    div.innerText = item;
-                    container.appendChild(div);
-                });
-            } catch (err) { console.log("Waiting for data..."); }
+                const response = await fetch(`${API_URL}/api/results`);
+                const hosts = await response.json();
+                const output = document.getElementById('console-output');
+                if(hosts.length > 0) {
+                    output.innerHTML = ""; 
+                    hosts.forEach(host => {
+                        const entry = document.createElement('div');
+                        entry.className = "node-entry";
+                        entry.innerHTML = `[NODE_ACTIVE] <b>${host}</b><br><small>Status: VERIFIED_HANDSHAKE</small>`;
+                        output.appendChild(entry);
+                    });
+                }
+            } catch (err) { console.log("Syncing..."); }
         }
     </script>
 </body>
 </html>
-
